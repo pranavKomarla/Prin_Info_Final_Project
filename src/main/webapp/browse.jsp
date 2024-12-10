@@ -108,15 +108,60 @@
 
         // Display the list only if data is submitted
         if (origin != null && destination != null && dateOfTravel != null) {
+        	
+        	ApplicationDB db = new ApplicationDB();	
+			Connection con = db.getConnection();		
+
+			
+			Statement stmt = con.createStatement();
+			
+			String entity = "train_schedule";
+			
+			
+			//Make a SELECT query from the table specified by the 'command' parameter at the index.jsp
+			String str = "SELECT * FROM " + entity + " WHERE Origin = ? AND Destination = ?";
+			PreparedStatement ps = con.prepareStatement(str);
+			ps.setString(1, origin);
+			ps.setString(2, destination);
+			
+			//Run the query against the database.
+			ResultSet rs = ps.executeQuery();
+            // Check if any matching records exist
+            /* if (!result.isBeforeFirst()) { // ResultSet is empty
+                // Redirect to login.jsp with an error message
+                response.sendRedirect("browse.jsp?error=Invalid+origin+or+destination");
+            } else {} */
+            
+            if (rs.next()) {
+%>
+                <h3>Train Schedules:</h3>
+                <ul>
+                <%
+                    do {
+                %>
+                    <li>
+                        <strong>Transit Line:</strong> <%= rs.getString("transitLineName") %><br>
+                        <strong>Train:</strong> <%= rs.getString("Train") %><br>
+                        <strong>Origin:</strong> <%= rs.getString("Origin") %><br>
+                        <strong>Destination:</strong> <%= rs.getString("Destination") %><br>
+                        <strong>Arrival Time:</strong> <%= rs.getString("ArrivalDateTime") %><br>
+                        <strong>Departure Time:</strong> <%= rs.getString("DepartureDateTime") %><br>
+                        <strong>Stops:</strong> <%= rs.getInt("Stops") %><br>
+                        <strong>Travel Time:</strong> <%= rs.getString("travelTime") %><br>
+                        <strong>Fare:</strong> <%= rs.getInt("Fare") %><br><br>
+                    </li>
+                <%
+                    } while (rs.next());
+                %>
+                </ul>
+            <%
+            } else {
+            %>
+                <p>No schedules found for this location.</p>
+            <%
+            }
     %>
-        <div id="resultList" style="margin-top: 20px;">
-            <h3>Your Travel Details:</h3>
-            <ul>
-                <li><strong>Origin:</strong> <%= origin %></li>
-                <li><strong>Destination:</strong> <%= destination %></li>
-                <li><strong>Date Of Travel:</strong> <%= dateOfTravel %></li>
-            </ul>
-        </div>
+    	
     <%
         }
     %>
