@@ -130,8 +130,6 @@
 				<li><strong>Trip Type:</strong> <%= nine %><br><br></li>
 				
 				
-				    
-				
 			</ul> 
 		
 		<%
@@ -139,6 +137,13 @@
 		
 		}
 		%>
+		
+		
+		<form  action="login.jsp" method="post" style="text-align: left;">
+		        <input type="submit" class = "logout-button" value="Logout" />
+	    </form>	
+		
+		
 	
 	
 
