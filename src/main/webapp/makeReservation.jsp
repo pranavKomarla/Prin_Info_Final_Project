@@ -2,6 +2,7 @@
 	pageEncoding="ISO-8859-1" import="com.cs336.pkg.*"%>
 <%@ page import="java.io.*,java.util.*,java.sql.*"%>
 <%@ page import="java.text.SimpleDateFormat"%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,9 +13,9 @@
 
 <%
 String function = request.getParameter("function");
-String username = request.getParameter("username");
-String password = request.getParameter("password"); 
-String email = request.getParameter("email");
+String username = (String) session.getAttribute("username");
+String password = (String) session.getAttribute("password"); 
+String email = (String) session.getAttribute("email");
 
 
 ApplicationDB database = new ApplicationDB(); 
@@ -81,15 +82,13 @@ if(function.equals("addReservation")) {
 	            int rowsAffected = stmt.executeUpdate();
 	            if (rowsAffected > 0) {
 	                out.println("Reservation added successfully!"+ tripType);
-	                response.sendRedirect("reservations.jsp?username="+username+"&password="+ password +"&email="+email); 
+	                response.sendRedirect("reservations.jsp"); 
 	            } 
 	        } catch (SQLException e) {
 	            e.printStackTrace();
 	            out.println("Error: " + e.getMessage() + tripType);
 	            out.println("Error: " + e.getMessage() + email);
 	        } 
-	        
-	        
 	    } 
 	    
 	    
@@ -97,7 +96,7 @@ if(function.equals("addReservation")) {
 	    	
 	    	%>
 	    	<p>You have already reserved this!<p>
-	    	<form action="browse.jsp?username=<%= username %>&password=<%= password %>" method="post">
+	    	<form action="browse.jsp" method="post">
 	           <input type="submit" value = "Back">
 	                        
 	        </form>  
@@ -123,11 +122,11 @@ if(function.equals("addReservation")) {
 	    
 	    if (rowsAffected > 0) {
 	        out.println("Row deleted successfully!");
-	        response.sendRedirect("reservations.jsp?username="+username+"&password="+ password +"&email="+email); 
+	        response.sendRedirect("reservations.jsp"); 
 	    } else {
 	        %>
 	        <p>You have already reserved this!<p>
-	    	<form action="reservations.jsp?username=<%= username %>&password=<%= password %>&email=<%= email %>" method="post">
+	    	<form action="reservations.jsp" method="post">
 	           <input type="submit" value = "Back">
 	                        
 	        </form> 
@@ -137,16 +136,10 @@ if(function.equals("addReservation")) {
         out.println("Error: " + e.getMessage());
     }
 	
-	
-	
 }
 
-    
-    
-    
-%>
 
-				
+%>
 
 
 </body>

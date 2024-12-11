@@ -15,12 +15,6 @@
 
 <%
 
-
-
-
-
-
-
 %>
 
 <h3>Reservation Portfolio:</h3>
@@ -35,10 +29,10 @@
 	PreparedStatement stmt2 = null;
     connection = database.getConnection();
     stmt2 = connection.prepareStatement(sql2);
-    String email = request.getParameter("email"); 
-    String username = request.getParameter("username");
-    String password = request.getParameter("password");
-    
+    String email =  (String)session.getAttribute("email"); 
+    String username = (String)session.getAttribute("username");
+    String password = (String)session.getAttribute("password");
+        
     stmt2.setString(1, email);
     
     ResultSet rs = stmt2.executeQuery();
@@ -92,15 +86,11 @@
 				    <input 
 				        type="submit" 
 				        value="Cancel Reservation" />
-				    
-				    <input type="hidden" name="email" value="<%= email %>">
-				    <input type="hidden" name="username" value="<%= username %>">
-				    <input type="hidden" name="password" value="<%= password %>">
 				</form>
 				
 				
 				
-				<form action="browse.jsp?username=<%= username %>&password=<%= password %>" method="post">
+				<form action="browse.jsp" method="post">
 	           		<input type="submit" value = "Back">
 	                        
 	        	</form> 

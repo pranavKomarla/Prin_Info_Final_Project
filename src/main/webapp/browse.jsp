@@ -5,8 +5,9 @@
 <%@ page import="javax.servlet.http.*,javax.servlet.*"%>
 
 <%!
-	String usernameStr = "";
-	String passwordStr = "";
+	String username = "";
+	String firstName = "";
+	String lastName = "";
 	String email = "";
 	int resNum;
 	int trainNumber;
@@ -20,105 +21,32 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 		<title>Insert title here</title>
-		<style>
-        .train-list {
-            list-style-type: none;
-            display:flex;
-            padding: 0;
-            flex-direction: column;
-            margin:0;
-        }
-        .train-item {
-            cursor: pointer;
-            background-color: #f2f2f2;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        
-        #trainDetails {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-        }
-    </style>
 	</head>
 	<div class="all">
 	<body>
-	
-	
-		
-		<% try {
-	
-			//Check where you are coming from
-			String source = request.getParameter("source");
-			
-			
-				ApplicationDB db = new ApplicationDB();	
-				Connection con = db.getConnection();		
-
-				//Create a SQL statement
-				Statement stmt = con.createStatement();
-				//Get the selected radio button from the index.jsp
-				String entity = "Customer";
-				//Get username from text field
-				String username = request.getParameter("username");
-				String password = request.getParameter("password");
-				usernameStr = username;
-				passwordStr = password; 
-				
-				String emailStr = "SELECT emailAddress FROM " + entity + " WHERE username = ? AND password = ?";
-				PreparedStatement psEmail = con.prepareStatement(emailStr);
-				psEmail.setString(1, username);
-				psEmail.setString(2, password);
-				ResultSet resultEmail = psEmail.executeQuery();
-				
-				if (resultEmail.next()) {
-				    email = resultEmail.getString("emailAddress");
-				} else {
-				    email = null; 
-				}
-				
-				//Make a SELECT query from the table specified by the 'command' parameter at the index.jsp
-				String str = "SELECT * FROM " + entity + " WHERE username = ? AND password = ?";
-				PreparedStatement ps = con.prepareStatement(str);
-				ps.setString(1, username);
-				ps.setString(2, password);
-				//Run the query against the database.
-				ResultSet result = ps.executeQuery();
-				
-				
-	            // Check if any matching records exist
-	            if (!result.isBeforeFirst()) { // ResultSet is empty
-	                // Redirect to login.jsp with an error message
-	                response.sendRedirect("login.jsp?error=Invalid+username+or+password");
-	            } else {}
-			//}
+		<%
+			try{
+				username = (String)session.getAttribute("username");
+				firstName = (String)session.getAttribute("firstName");
+				lastName = (String)session.getAttribute("lastName");
+				email = (String)session.getAttribute("emailAddress");
+			} catch(Error e) {
+				out.println("Error with fetching:"+e);
+			}
 		%>
-			
+	</body>
 		<!--  Make an HTML table to show the results in: -->
 	<div class="left-container">
 		<div class="logout-container">
 			<h3 class="train-schedule-name">
-				Name: 
-						<%
-							while(result.next()){ 
-								out.print(" "+result.getString("firstName")+"  ");
-								out.print(result.getString("lastName"));
-							}
-			%></h3>
+				
+				Name: <%= firstName %> <%= lastName %>
+
+			</h3>
 			    
 		</div>
-			
-			
-		<%} catch (Exception e) {
-			out.print(e);
-		}%>
 		
-		
-		<form action="browse.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post" class="form-container">
+		<form action="browse.jsp" method="post" class="form-container">
         <h2 >Search Train Schedule</h2>
         <div>
             <label for="textbox1">Origin:</label>
@@ -202,7 +130,7 @@
 				            orderByClause = " ORDER BY Fare";
 				            break;
 				        default:
-				            orderByClause = ""; // No sorting
+				            orderByClause = "";
 				    }
 				}
 				
@@ -228,25 +156,22 @@
 				
 				PreparedStatement ps = con.prepareStatement(queryBuilder.toString());
 				
-				// Set parameters dynamically
 				for (int i = 0; i < parameters.size(); i++) {
 				    ps.setString(i + 1, parameters.get(i));
 				}
 				
 				ResultSet rs = ps.executeQuery();
-
-                // Check if any matching records exist
-                /* if (!result.isBeforeFirst()) { // ResultSet is empty
-                    // Redirect to login.jsp with an error message
-                    response.sendRedirect("browse.jsp?error=Invalid+origin+or+destination");
-                } else {} */
-                
                                
-                resNum = ((int) (Math.random() * 10000) + 1);
+				HashSet<Integer> resList = (HashSet<Integer>)session.getAttribute("resList");
+                resNum = 808;
+                
+                while(resList.contains(resNum)){
+                    resNum = ((int) (Math.random() * 10000) + 1);
+                }
+                resList.add(resNum);
+                session.setAttribute("resList", resList);
                 
                 int count = 0;
-                
-
                 if (rs.next()) {
                 	%>
                 	        <h3 class = "train-schedule-name">Train Schedules:</h3>
@@ -261,7 +186,7 @@
                 	        <%
                 	                }
                 	        %>	
-									<form action="makeReservation.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>&function=addReservation" method="post">                	                        
+									<form action="makeReservation.jsp?function=addReservation" method="post">                	                        
 										<ul class="train-item">
                 	                            <%
                 	                                String one = rs.getString("transitLineName");
@@ -294,7 +219,6 @@
                 	                            <input type="hidden" name="destinationStation" value="<%= four %>">
                 	                            <input type="hidden" name="totalFare" value="<%= nine %>">
                 	                            <input type="hidden" name="tripType" value="<%= ten %>">
-                	                            
                 	                            <input type="submit" value="Make Reservation">
                 	                        </ul> 
                 	                    </form>   
@@ -555,6 +479,28 @@
         	margin-bottom:0;
             width: fit-content;
             font-weight: 300;
+        }
+        .train-list {
+            list-style-type: none;
+            display:flex;
+            padding: 0;
+            flex-direction: column;
+            margin:0;
+        }
+        .train-item {
+            cursor: pointer;
+            background-color: #f2f2f2;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        #trainDetails {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
         }
     </style>
 </head>
