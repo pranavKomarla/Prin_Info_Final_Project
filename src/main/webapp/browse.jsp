@@ -125,28 +125,45 @@
 		}%>
 		
 		
-	<form action="browse.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post" style="text-align: left;">
-	
-	
-    	
-        <label for="textbox1">Origin:</label>
-        <input type="text" id="textbox1" name="origin" placeholder="Enter Origin">
-        <br><br>
-
-        
-        <label for="textbox2">Destination:</label>
-        <input type="text" id="textbox2" name="destination" placeholder="Enter Destination">
-        <br><br>
-
-        
-        <label for="textbox3">Date Of Travel:</label>
-		<input type="date" id="textbox3" name="dateOfTravel" placeholder="Enter Date of Travel">
-		<br><br>
-
-        <!-- Submit button -->
+		<form action="browse.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post" class="form-container">
+        <h2>Search Train Schedule</h2>
+        <div>
+            <label for="textbox1">Origin:</label>
+            <input 
+                type="text" 
+                id="textbox1" 
+                name="origin" 
+                placeholder="Enter Origin" 
+                value="<%= request.getParameter("origin") != null ? request.getParameter("origin") : "" %>">
+        </div>
+        <div>
+            <label for="textbox2">Destination:</label>
+            <input 
+                type="text" 
+                id="textbox2" 
+                name="destination" 
+                placeholder="Enter Destination" 
+                value="<%= request.getParameter("destination") != null ? request.getParameter("destination") : "" %>">
+        </div>
+        <div>
+            <label for="textbox3">Date Of Travel:</label>
+            <input 
+                type="date" 
+                id="textbox3" 
+                name="dateOfTravel" 
+                placeholder="Enter Date of Travel" 
+                value="<%= request.getParameter("dateOfTravel") != null ? request.getParameter("dateOfTravel") : "" %>">
+        </div>
+        <div>
+            <label for="sortBy">Sort by:</label>
+            <select id="sortBy" name="sort">
+                <option value="arrival" <%= "arrival".equals(request.getParameter("sort")) ? "selected" : "" %>>Arrival Time</option>
+                <option value="departure" <%= "departure".equals(request.getParameter("sort")) ? "selected" : "" %>>Departure Time</option>
+                <option value="fare" <%= "fare".equals(request.getParameter("sort")) ? "selected" : "" %>>Fare</option>
+            </select>
+        </div>
         <input type="submit" value="Search">
     </form>
-		
 	<%
         // Check if form data is available
         String origin = request.getParameter("origin");
@@ -160,37 +177,57 @@
 		        Connection con = db.getConnection();
 		
 		        String entity = "train_schedule";
-		
-		        // Start building the SQL query
-		        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM " + entity + " WHERE 1=1");
-		
-		        // List to hold query parameters
 		        List<String> parameters = new ArrayList<>();
 		
-		        // Dynamically add conditions based on the provided fields
-		        if (origin != null && !origin.isEmpty()) {
-		            queryBuilder.append(" AND Origin = ?");
-		            parameters.add(origin);
-		        }
-		        if (destination != null && !destination.isEmpty()) {
-		            queryBuilder.append(" AND Destination = ?");
-		            parameters.add(destination);
-		        }
-		        if (dateOfTravel != null && !dateOfTravel.isEmpty()) {
-		            queryBuilder.append(" AND DATE(DepartureDateTime) = ?");
-		            parameters.add(dateOfTravel); // Assuming `dateOfTravel` is in `yyyy-MM-dd` format
-		        }
-		
-		        // Prepare the SQL statement
-		        PreparedStatement ps = con.prepareStatement(queryBuilder.toString());
-		
-		        // Set the parameters dynamically
-		        for (int i = 0; i < parameters.size(); i++) {
-		            ps.setString(i + 1, parameters.get(i));
-		        }
-    			
-    			//Run the query against the database.
-    			ResultSet rs = ps.executeQuery();
+		        // Start building the SQL query
+		       	String sortOption = request.getParameter("sort");
+				String orderByClause = "";
+				
+				if (sortOption != null) {
+				    switch (sortOption) {
+				        case "arrival":
+				            orderByClause = " ORDER BY ArrivalDateTime";
+				            break;
+				        case "departure":
+				            orderByClause = " ORDER BY DepartureDateTime";
+				            break;
+				        case "fare":
+				            orderByClause = " ORDER BY Fare";
+				            break;
+				        default:
+				            orderByClause = ""; // No sorting
+				    }
+				}
+				
+				// Include the sorting clause in the SQL query
+				StringBuilder queryBuilder = new StringBuilder("SELECT * FROM train_schedule WHERE 1=1");
+				
+				// Add conditions for filtering (origin, destination, dateOfTravel) dynamically
+				if (origin != null && !origin.isEmpty()) {
+				    queryBuilder.append(" AND Origin = ?");
+				    parameters.add(origin);
+				}
+				if (destination != null && !destination.isEmpty()) {
+				    queryBuilder.append(" AND Destination = ?");
+				    parameters.add(destination);
+				}
+				if (dateOfTravel != null && !dateOfTravel.isEmpty()) {
+				    queryBuilder.append(" AND DATE(DepartureDateTime) = ?");
+				    parameters.add(dateOfTravel);
+				}
+				
+				// Append the sorting clause
+				queryBuilder.append(orderByClause);
+				
+				PreparedStatement ps = con.prepareStatement(queryBuilder.toString());
+				
+				// Set parameters dynamically
+				for (int i = 0; i < parameters.size(); i++) {
+				    ps.setString(i + 1, parameters.get(i));
+				}
+				
+				ResultSet rs = ps.executeQuery();
+
                 // Check if any matching records exist
                 /* if (!result.isBeforeFirst()) { // ResultSet is empty
                     // Redirect to login.jsp with an error message
@@ -209,7 +246,7 @@
                         	
                     %>	
 
-                    <form action="reservations.jsp" method="post">
+                    <form action="reservations.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post">
                     	<ul class = "train-item">
                     	
                     		<%
@@ -273,7 +310,7 @@
         }
     %>
 	
-	<form action="reservation.jsp" method="post" style="text-align: left;">
+	<form action="reservations.jsp" method="post" style="text-align: left;">
         <input type="submit" value="My Reservations" />
     </form>
     
@@ -286,48 +323,152 @@
 
 <head>
     <style>
+        /* General body styling */
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .train-list {
-            list-style-type: none;
+            background-color: #f4f4f4;
+            margin: 0;
             padding: 0;
         }
-        .train-item {
-            margin: 10px 0;
-            cursor: pointer;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+
+        /* Center the main container */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-        .train-item:hover {
-            background-color: #e0e0e0;
-        }
+
+        /* Form container styling */
         .form-container {
+            background-color: #ffffff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .form-container h2 {
+            text-align: center;
             margin-bottom: 20px;
+            font-size: 1.8em;
+            color: #333;
         }
-        label {
+
+        .form-container label {
             display: block;
-            margin-bottom: 8px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
         }
-        input[type="text"], input[type="date"], input[type="submit"] {
+
+        .form-container input[type="text"],
+        .form-container input[type="date"],
+        .form-container select {
+            width: 100%;
+            padding: 10px;
             margin-bottom: 15px;
-            padding: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            box-sizing: border-box;
         }
-        input[type="submit"] {
+
+        .form-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
             background-color: #007bff;
             color: white;
+            font-size: 1em;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
-        input[type="submit"]:hover {
+
+        .form-container input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        /* Train schedule container */
+        .train-schedule-container {
+            width: 800px;
+            max-width: 100%;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .train-schedule-container h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .train-item {
+            list-style: none;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .train-item:hover {
+            background-color: #f1f1f1;
+        }
+
+        .train-item strong {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .train-item form {
+            margin-top: 10px;
+        }
+
+        .train-item input[type="submit"] {
+            padding: 8px 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .train-item input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        /* Button styles for navigation (My Reservations, Logout) */
+        .nav-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .nav-buttons form {
+            margin-left: 10px;
+        }
+
+        .nav-buttons input[type="submit"] {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-buttons input[type="submit"]:hover {
             background-color: #0056b3;
         }
     </style>
 </head>
-message.txt
-12 KB

@@ -14,6 +14,8 @@
 <body>
 
 <%
+String username = request.getParameter("username");
+String password = request.getParameter("password"); 
 String email = request.getParameter("email");
 int resNum = Integer.parseInt(request.getParameter("resNum"));
 String transitLineName = request.getParameter("transitLineName");
@@ -33,7 +35,7 @@ String destinationStation = request.getParameter("destinationStation");
 int totalFare = Integer.parseInt(request.getParameter("totalFare"));
 String tripType = request.getParameter("tripType");
 
-String sql = "INSERT IGNORE INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+String sql = "INSERT INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 ApplicationDB db = new ApplicationDB(); 
 Connection con = null;
@@ -65,18 +67,77 @@ try {
     e.printStackTrace();
     out.println("Error: " + e.getMessage() + tripType);
     out.println("Error: " + e.getMessage() + email);
-} finally {
-    try {
-        if (stmt != null) stmt.close();
-        if (con != null) con.close();
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
+} 
 
 
 
 %>
+
+<h3>Reservation Portfolio:</h3>
+
+<%
+	String sql2 = "SELECT * FROM reservation_accountreservation WHERE email_address = ?";
+	ApplicationDB db2 = new ApplicationDB(); 
+	Connection con2 = null;
+	PreparedStatement stmt2 = null;
+
+
+    con2 = db.getConnection();
+    stmt2 = con.prepareStatement(sql2);
+    
+    // Set the parameters
+    stmt2.setString(1, email);
+    
+
+    // Execute the update statement
+    ResultSet rs = stmt2.executeQuery();
+    
+			while (rs.next()) {
+			%>
+			
+				<ul>
+					<%
+                		String one = rs.getString("resNum");
+                 		String two = rs.getString("transitLine"); 
+                 		Timestamp three = rs.getTimestamp("DepartureDateTime");
+                 		String four = rs.getString("trainNumber");
+                 		String five = rs.getString("originStation");
+                 		String six = rs.getString("destinationStation");
+                 		int seven = rs.getInt("totalFare");
+                 		String eight = rs.getString("tripType"); 
+                		%>
+                		
+                		<li><strong>Reservation Number:</strong> <%= one %><br> </li>
+                        <li><strong>Transit Line:</strong> <%= two %><br> </li>
+                        <li><strong>Departure Time:</strong> <%= three%><br></li>
+                        <li><strong>Train Number:</strong> <%=  four%><br></li>
+                        <li><strong>Origin Station:</strong> <%= five %><br></li>
+                        <li><strong>Destination Station:</strong> <%= six%><br></li>
+                        <li><strong>Fare:</strong> <%=  seven%><br></li>
+                        <li><strong>Travel Time:</strong> <%=  eight%><br></li>
+                        
+	
+	
+	
+				</ul>
+			
+		<% 
+			}
+		%>
+		
+	
+	
+		
+		
+				<form action="browse.jsp?username=<%= username %>&password=<%= password %>" method="post">
+                    	<input type="submit" value = "Back">
+                        
+                </form>   
+							
+	
+		
+        
+
 
 
 
