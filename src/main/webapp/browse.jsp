@@ -246,7 +246,7 @@
                         	
                     %>	
 
-                    <form action="reservations.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post">
+                    <form action="makeReservation.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>&function=addReservation" method="post">
                     	<ul class = "train-item">
                     	
                     		<%
@@ -312,6 +312,9 @@
 	
 	<form action="reservations.jsp" method="post" style="text-align: left;">
         <input type="submit" value="My Reservations" />
+        <input type="hidden" name="email" value="<%= email %>">
+        <input type="hidden" name="username" value="<%= usernameStr %>">
+        <input type="hidden" name="password" value="<%= passwordStr %>">
     </form>
     
     <form action="login.jsp" method="post" style="text-align: left;">

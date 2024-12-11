@@ -14,96 +14,7 @@
 <body>
 
 <%
-String username = request.getParameter("username");
-String password = request.getParameter("password"); 
-String email = request.getParameter("email");
-int resNum = Integer.parseInt(request.getParameter("resNum"));
-String transitLineName = request.getParameter("transitLineName");
-String departureDate = request.getParameter("departureDate");
 
-
-Timestamp timestamp = null;
-if (!departureDate.equals("null") && !departureDate.isEmpty() && !departureDate.equals(null)) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    java.util.Date parsedDate = dateFormat.parse(departureDate);
-    timestamp = new Timestamp(parsedDate.getTime());
-}
-
-int trainNumber = Integer.parseInt(request.getParameter("trainNumber"));
-String originStation = request.getParameter("originStation");
-String destinationStation = request.getParameter("destinationStation");
-int totalFare = Integer.parseInt(request.getParameter("totalFare"));
-String tripType = request.getParameter("tripType");
-
-String checkDuplicates = "SELECT * FROM reservation_accountreservation WHERE email_address = ? AND transitLine = ? AND trainNumber = ?";
-ApplicationDB database = new ApplicationDB(); 
-Connection connection = null;
-PreparedStatement statement = null;
-
-
-
-try {
-    connection = database.getConnection();
-    statement = connection.prepareStatement(checkDuplicates);
-    statement.setString(1, email);
-	statement.setString(2, transitLineName);
-	statement.setInt(3, trainNumber);
-    
-    ResultSet rows = statement.executeQuery();
-    
-    if (!rows.next()) {
-        
-        String sql = "INSERT INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        ApplicationDB db = new ApplicationDB(); 
-        Connection con = null;
-        PreparedStatement stmt = null;
-        
-
-        try {
-            con = db.getConnection();
-            stmt = con.prepareStatement(sql);
-            
-            // Set the parameters
-            stmt.setString(1, email);
-            stmt.setInt(2, resNum);
-            stmt.setString(3, transitLineName);
-            stmt.setTimestamp(4, timestamp);
-            stmt.setInt(5, trainNumber);
-            stmt.setString(6, originStation);
-            stmt.setString(7, destinationStation);
-            stmt.setInt(8, totalFare);
-            stmt.setString(9, tripType);
-
-            // Execute the update statement
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                out.println("Reservation added successfully!"+ tripType);
-            } else {
-                out.println("Reservation could not be added: Duplicate Reservation");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            out.println("Error: " + e.getMessage() + tripType);
-            out.println("Error: " + e.getMessage() + email);
-        } 
-        
-        
-    } 
-    
-    
-    else {
-    	
-    	%>
-    	<p>You have already reserved this!<p>
-    	<% 
-        
-    }
-} catch (SQLException e) {
-    e.printStackTrace();
-    out.println("Error: " + e.getMessage() + tripType);
-    out.println("Error: " + e.getMessage() + email);
-} 
 
 
 
@@ -113,22 +24,23 @@ try {
 %>
 
 <h3>Reservation Portfolio:</h3>
-
 <%
 	String sql2 = "SELECT * FROM reservation_accountreservation WHERE email_address = ?";
-	ApplicationDB db2 = new ApplicationDB(); 
-	Connection con2 = null;
+	
+	
+
+
+	ApplicationDB database = new ApplicationDB(); 
+	Connection connection = null;
 	PreparedStatement stmt2 = null;
-
-
-    con2 = db2.getConnection();
-    stmt2 = con2.prepareStatement(sql2);
+    connection = database.getConnection();
+    stmt2 = connection.prepareStatement(sql2);
+    String email = request.getParameter("email"); 
+    String username = request.getParameter("username");
+    String password = request.getParameter("password");
     
-    // Set the parameters
     stmt2.setString(1, email);
     
-
-    // Execute the update statement
     ResultSet rs = stmt2.executeQuery();
     
 			while (rs.next()) {
@@ -162,20 +74,44 @@ try {
 			
 		<% 
 			}
+			
 		%>
 		
-	
-	
-		
-		
+		<%
+		%>
+
+				<form action="makeReservation.jsp?function=cancel" method="post">
+				    <input 
+				        type="text" 
+				        id="cancelReservation" 
+				        name="reservationToCancel" 
+				        placeholder="Enter Reservation Number" 
+				        value="<%= request.getParameter("reservationToCancel") != null ? request.getParameter("reservationToCancel") : "" %>" />
+				    
+				    <!-- Disable the button based on server-side logic -->
+				    <input 
+				        type="submit" 
+				        value="Cancel Reservation" />
+				    
+				    <input type="hidden" name="email" value="<%= email %>">
+				    <input type="hidden" name="username" value="<%= username %>">
+				    <input type="hidden" name="password" value="<%= password %>">
+				</form>
+				
+				
+				
 				<form action="browse.jsp?username=<%= username %>&password=<%= password %>" method="post">
-                    	<input type="submit" value = "Back">
-                        
-                </form>   
-							
+	           		<input type="submit" value = "Back">
+	                        
+	        	</form> 
+						
+	
 	
 		
-        
+		
+				
+				
+				
 
 
 
