@@ -33,16 +33,11 @@
 		<p><%= report %></p>
 		<%
 		
-		
-		
-		
-		
 	}
-	
 
 %>
 
-	<form action="adminDashboard.jsp%>" method="post" class="form-container">
+	<form action="adminDashboard.jsp" method="post" class="form-container">
         <h2 >Search Train Schedule</h2>
         <div>
             <label for="textbox1">Transit Line:</label>
@@ -72,34 +67,29 @@
         String customerName = request.getParameter("customerName");
         
         
-        
-        
-        
-        
-        
-        
         if (transitLine != null || customerName != null) {
         	String[] nameParts = customerName.split(" ");
             String customerEmail = "";
             
-            String sqlName = "SELECT emailAddress FROM Customer WHERE firstName = ? AND lastName = ?";
-            PreparedStatement ps2 = con.prepareStatement(sqlName);
-            ps2.setString(1, nameParts[0]);
-            ps2.setString(2, nameParts[1]);
-            ResultSet rsEmail = ps2.executeQuery(); 
-            if(rsEmail.next()) {
-            	customerEmail = rsEmail.getString("emailAddress" );
-            }
+            
         	
         	StringBuilder queryBuilder = new StringBuilder("SELECT * FROM reservation_accountreservation WHERE 1=1");
         	
         	List<String> parameters = new ArrayList<>();
 			
 			if (transitLine!= null && !transitLine.isEmpty()) {
-			    queryBuilder.append(" AND transitLineName = ?");
+			    queryBuilder.append(" AND transitLine = ?");
 			    parameters.add(transitLine);
 			}
 			if (customerName != null && !customerName.isEmpty()) {
+				String sqlName = "SELECT emailAddress FROM Customer WHERE firstName = ? AND lastName = ?";
+	            PreparedStatement ps2 = con.prepareStatement(sqlName);
+	            ps2.setString(1, nameParts[0]);
+	            ps2.setString(2, nameParts[1]);
+	            ResultSet rsEmail = ps2.executeQuery(); 
+	            if(rsEmail.next()) {
+	            	customerEmail = rsEmail.getString("emailAddress" );
+	            }
 			    queryBuilder.append(" AND email_address= ?");
 			    parameters.add(customerEmail);
 			}
@@ -114,14 +104,7 @@
 			
 			ResultSet rs = ps3.executeQuery();
         	
-        	
-        
-        
-        
-        
 			while(rs.next()) {
-        
-		    
     %>
     
 			<ul class="train-item">
@@ -137,7 +120,7 @@
 				String nine = rs.getString("tripType");
 				%>
 				<li><strong>Email Address:</strong> <%= one %><br></li>
-				<li><strong>Reservation Number:</strong> <%= two %><br>s</li>
+				<li><strong>Reservation Number:</strong> <%= two %><br></li>
 				<li><strong>Transit Line:</strong> <%= three %><br></li>
 				<li><strong>Departure Date Time:</strong> <%= four %><br></li>
 				<li><strong>Train Number:</strong> <%= six %><br></li>
@@ -148,7 +131,7 @@
 				
 				
 				    
-				<input type="submit" value="Make Reservation">
+				
 			</ul> 
 		
 		<%
