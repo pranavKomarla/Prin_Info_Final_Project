@@ -18,13 +18,10 @@ String email = request.getParameter("email");
 int resNum = Integer.parseInt(request.getParameter("resNum"));
 String transitLineName = request.getParameter("transitLineName");
 String departureDate = request.getParameter("departureDate");
-String tripType; 
-
-
 
 
 Timestamp timestamp = null;
-if (!departureDate.equals("null") && !departureDate.isEmpty()) {
+if (!departureDate.equals("null") && !departureDate.isEmpty() && !departureDate.equals(null)) {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     java.util.Date parsedDate = dateFormat.parse(departureDate);
     timestamp = new Timestamp(parsedDate.getTime());
@@ -34,14 +31,9 @@ int trainNumber = Integer.parseInt(request.getParameter("trainNumber"));
 String originStation = request.getParameter("originStation");
 String destinationStation = request.getParameter("destinationStation");
 int totalFare = Integer.parseInt(request.getParameter("totalFare"));
+String tripType = request.getParameter("tripType");
 
-if(originStation.equals(destinationStation)) {
-	tripType = "round-trip";
-} else {
-	tripType = "one-way";
-}
-
-String sql = "INSERT INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+String sql = "INSERT IGNORE INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 ApplicationDB db = new ApplicationDB(); 
 Connection con = null;
@@ -60,18 +52,18 @@ try {
     stmt.setString(6, originStation);
     stmt.setString(7, destinationStation);
     stmt.setInt(8, totalFare);
-    stmt.setString(9, tripType); 
+    stmt.setString(9, tripType);
 
     // Execute the update statement
     int rowsAffected = stmt.executeUpdate();
     if (rowsAffected > 0) {
-        out.println("Reservation added successfully!");
+        out.println("Reservation added successfully!"+ tripType);
     } else {
-        out.println("Reservation could not be added.");
+        out.println("Reservation could not be added: Duplicate Reservation");
     }
 } catch (SQLException e) {
     e.printStackTrace();
-    out.println("Error: " + e.getMessage() + transitLineName);
+    out.println("Error: " + e.getMessage() + tripType);
     out.println("Error: " + e.getMessage() + email);
 } finally {
     try {

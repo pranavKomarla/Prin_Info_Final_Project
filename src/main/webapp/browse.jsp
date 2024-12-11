@@ -12,11 +12,7 @@
 	int trainNumber;
 	String transitLineName, departureDate, originStation, destinationStation, tripType; 
 	int totalFare; 
-	
-	
-	
-	
-    
+   
 %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -118,7 +114,6 @@
 
 				</tr>
 				
-
 			<% }
 			//close the connection.
 			db.closeConnection(con);
@@ -145,8 +140,8 @@
 
         
         <label for="textbox3">Date Of Travel:</label>
-        <input type="text" id="textbox3" name="dateOfTravel" placeholder="Enter Date of Travel">
-        <br><br>
+		<input type="date" id="textbox3" name="dateOfTravel" placeholder="Enter Date of Travel">
+		<br><br>
 
         <!-- Submit button -->
         <input type="submit" value="Search">
@@ -159,23 +154,40 @@
         String dateOfTravel = request.getParameter("dateOfTravel");
 
         // Display the list only if data is submitted
-        if (origin != null && destination != null && dateOfTravel != null) {
-        	
-        	try {
-        		ApplicationDB db = new ApplicationDB();	
-    			Connection con = db.getConnection();		
-
-    			
-    			Statement stmt = con.createStatement();
-    			
-    			String entity = "train_schedule";
-    			
-    			
-    			//Make a SELECT query from the table specified by the 'command' parameter at the index.jsp
-    			String str = "SELECT * FROM " + entity + " WHERE Origin = ? AND Destination = ?";
-    			PreparedStatement ps = con.prepareStatement(str);
-    			ps.setString(1, origin);
-    			ps.setString(2, destination);
+		  if (origin != null || destination != null || dateOfTravel != null) {
+		    try {
+		        ApplicationDB db = new ApplicationDB();
+		        Connection con = db.getConnection();
+		
+		        String entity = "train_schedule";
+		
+		        // Start building the SQL query
+		        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM " + entity + " WHERE 1=1");
+		
+		        // List to hold query parameters
+		        List<String> parameters = new ArrayList<>();
+		
+		        // Dynamically add conditions based on the provided fields
+		        if (origin != null && !origin.isEmpty()) {
+		            queryBuilder.append(" AND Origin = ?");
+		            parameters.add(origin);
+		        }
+		        if (destination != null && !destination.isEmpty()) {
+		            queryBuilder.append(" AND Destination = ?");
+		            parameters.add(destination);
+		        }
+		        if (dateOfTravel != null && !dateOfTravel.isEmpty()) {
+		            queryBuilder.append(" AND DATE(DepartureDateTime) = ?");
+		            parameters.add(dateOfTravel); // Assuming `dateOfTravel` is in `yyyy-MM-dd` format
+		        }
+		
+		        // Prepare the SQL statement
+		        PreparedStatement ps = con.prepareStatement(queryBuilder.toString());
+		
+		        // Set the parameters dynamically
+		        for (int i = 0; i < parameters.size(); i++) {
+		            ps.setString(i + 1, parameters.get(i));
+		        }
     			
     			//Run the query against the database.
     			ResultSet rs = ps.executeQuery();
@@ -185,12 +197,8 @@
                     response.sendRedirect("browse.jsp?error=Invalid+origin+or+destination");
                 } else {} */
                 
-                
-                
+                               
                 resNum = ((int) (Math.random() * 10000) + 1);
-                
-                
-                
                 
                 if (rs.next()) {
     %>
@@ -200,9 +208,7 @@
                         do {
                         	
                     %>	
-                    
-                    
-                    
+
                     <form action="reservations.jsp" method="post">
                     	<ul class = "train-item">
                     	
@@ -214,16 +220,21 @@
 	                    		String five = rs.getString("ArrivalDateTime");
 	                    		Timestamp six = rs.getTimestamp("DepartureDateTime");
 	                    		String seven = rs.getString("travelTime");
-	                    		int eight = rs.getInt("Stops");
+	                    		String eight = rs.getString("Stops");
 	                    		int nine = rs.getInt("Fare");
+	                    		String ten = "";
+	                    		if(three.equals(four))
+	                    			ten = "one way";
+	                    		else
+	                    			ten = "round trip";
                     		%>
                             <li><strong>Transit Line:</strong> <%= one %><br> </li>
                             <li><strong>Train:</strong> <%= two%><br></li>
                             <li><strong>Origin:</strong> <%=  three%><br></li>
                             <li><strong>Destination:</strong> <%= four %><br></li>
-                            <li><strong>Arrival Time:</strong> <%=  five%><br></li>
                             <li><strong>Departure Time:</strong> <%= six%><br></li>
-                            <li><strong>Stops:</strong> <%=  seven%><br></li>
+                            <li><strong>Arrival Time:</strong> <%=  five%><br></li>
+	                        <li><strong>Stops:</strong> <%=  seven%><br></li>
                             <li><strong>Travel Time:</strong> <%=  eight%><br></li>
                             <li><strong>Fare:</strong> <%=  nine%><br><br></li>
                             
@@ -235,30 +246,18 @@
                         	<input type="hidden" name="originStation" value="<%= three %>">
                         	<input type="hidden" name="destinationStation" value="<%= four %>">
                         	<input type="hidden" name="totalFare" value="<%= nine %>">
+                        	<input type="hidden" name="tripType" value"<%=ten%>">
                         	<input type="submit" value="Make Reservation">
                         </ul>
                         
-                    </form>
-                        
+                    </form>   
                       
                     <%
                         } while (rs.next());
                     %>
-                    
-                    
-                    
-                    </ul>
-                    
-                    
-                    
-                    
-                    
-                   
-                    
-                   
+
+                    </ul>       
                 <%
-                
-               
                 } else {
                 %>
                     <p>No schedules found for this location.</p>
@@ -268,16 +267,13 @@
                 e.printStackTrace();
             } 
         	
-        	
-        	
-        	
     %>
     	
     <%
         }
     %>
 	
-	<form action="reservations.jsp" method="post" style="text-align: left;">
+	<form action="reservation.jsp" method="post" style="text-align: left;">
         <input type="submit" value="My Reservations" />
     </form>
     
@@ -285,9 +281,53 @@
         <input type="submit" value="Logout" />
     </form>
     
-    
-    
-    
-    
 	</body>
 </html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .train-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .train-item {
+            margin: 10px 0;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .train-item:hover {
+            background-color: #e0e0e0;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        input[type="text"], input[type="date"], input[type="submit"] {
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+message.txt
+12 KB
