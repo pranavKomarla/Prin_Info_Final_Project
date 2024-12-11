@@ -23,19 +23,19 @@
 		<style>
         .train-list {
             list-style-type: none;
+            display:flex;
             padding: 0;
+            flex-direction: column;
+            margin:0;
         }
         .train-item {
-            margin: 10px 0;
             cursor: pointer;
             background-color: #f2f2f2;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .train-item:hover {
-            background-color: #ddd;
-        }
+        
         #trainDetails {
             margin-top: 20px;
             padding: 15px;
@@ -45,6 +45,7 @@
         }
     </style>
 	</head>
+	<div class="all">
 	<body>
 	
 	
@@ -55,8 +56,6 @@
 			String source = request.getParameter("source");
 			
 			
-			//if("login".equals(source)) {
-				//Get the database connection
 				ApplicationDB db = new ApplicationDB();	
 				Connection con = db.getConnection();		
 
@@ -100,25 +99,19 @@
 		%>
 			
 		<!--  Make an HTML table to show the results in: -->
-	<table>
-		<tr>    
-			<td>First Name</td>
-			<td>Last Name</td>
-		</tr>
-			<%
-			//parse out the results
-			while (result.next()) { %>
-				<tr>    
-					<td><%= result.getString("firstName") %></td>
-					<td><%= result.getString("lastName") %></td>
-
-				</tr>
-				
-			<% }
-			//close the connection.
-			db.closeConnection(con);
-			%>
-	</table>
+	<div class="left-container">
+		<div class="logout-container">
+			<h3 class="train-schedule-name">
+				Name: 
+						<%
+							while(result.next()){ 
+								out.print(" "+result.getString("firstName")+"  ");
+								out.print(result.getString("lastName"));
+							}
+			%></h3>
+			    
+		</div>
+			
 			
 		<%} catch (Exception e) {
 			out.print(e);
@@ -126,7 +119,7 @@
 		
 		
 		<form action="browse.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>" method="post" class="form-container">
-        <h2>Search Train Schedule</h2>
+        <h2 >Search Train Schedule</h2>
         <div>
             <label for="textbox1">Origin:</label>
             <input 
@@ -164,6 +157,20 @@
         </div>
         <input type="submit" value="Search">
     </form>
+    <div class="logout-container">
+    	<form  action="reservations.jsp" method="post" style="text-align: left;">
+	        <input type="submit" class = "reservations-button" value="My Reservations" />
+	    </form>
+	    
+		<form  action="login.jsp" method="post" style="text-align: left;">
+		        <input type="submit" class = "logout-button" value="Logout" />
+	    </form>	
+	    </div>
+	    
+	</body>
+	</div>
+	<div class="schedules-container">
+    
 	<%
         // Check if form data is available
         String origin = request.getParameter("origin");
@@ -237,121 +244,145 @@
                                
                 resNum = ((int) (Math.random() * 10000) + 1);
                 
+                int count = 0;
+                
+
                 if (rs.next()) {
-    %>
-                    <h3>Train Schedules:</h3>
-                    <ul class = "train-list">
-                    <%
-                        do {
-                        	
-                    %>	
-
-                    <form action="makeReservation.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>&function=addReservation" method="post">
-                    	<ul class = "train-item">
-                    	
-                    		<%
-                    			String one = rs.getString("transitLineName");
-	                    		int two = rs.getInt("Train");
-	                    		String three = rs.getString("Origin");
-	                    		String four = rs.getString("Destination");
-	                    		String five = rs.getString("ArrivalDateTime");
-	                    		Timestamp six = rs.getTimestamp("DepartureDateTime");
-	                    		String seven = rs.getString("travelTime");
-	                    		String eight = rs.getString("Stops");
-	                    		int nine = rs.getInt("Fare");
-	                    		String ten = "";
-	                    		if(three.equals(four))
-	                    			ten = "one way";
-	                    		else
-	                    			ten = "round trip";
-                    		%>
-                            <li><strong>Transit Line:</strong> <%= one %><br> </li>
-                            <li><strong>Train:</strong> <%= two%><br></li>
-                            <li><strong>Origin:</strong> <%=  three%><br></li>
-                            <li><strong>Destination:</strong> <%= four %><br></li>
-                            <li><strong>Departure Time:</strong> <%= six%><br></li>
-                            <li><strong>Arrival Time:</strong> <%=  five%><br></li>
-	                        <li><strong>Stops:</strong> <%=  seven%><br></li>
-                            <li><strong>Travel Time:</strong> <%=  eight%><br></li>
-                            <li><strong>Fare:</strong> <%=  nine%><br><br></li>
-                            
-                            <input type="hidden" name="email" value="<%= email %>">
-                        	<input type="hidden" name="resNum" value="<%= resNum %>">
-                        	<input type="hidden" name="transitLineName" value="<%= one %>">
-                        	<input type="hidden" name="departureDate" value="<%= six.toString() %>">
-                        	<input type="hidden" name="trainNumber" value="<%= two %>">
-                        	<input type="hidden" name="originStation" value="<%= three %>">
-                        	<input type="hidden" name="destinationStation" value="<%= four %>">
-                        	<input type="hidden" name="totalFare" value="<%= nine %>">
-                        	<input type="hidden" name="tripType" value"<%=ten%>">
-                        	<input type="submit" value="Make Reservation">
-                        </ul>
-                        
-                    </form>   
-                      
-                    <%
-                        } while (rs.next());
-                    %>
-
-                    </ul>       
-                <%
-                } else {
-                %>
-                    <p>No schedules found for this location.</p>
-                <%
+                	%>
+                	        <h3 class = "train-schedule-name">Train Schedules:</h3>
+                	        <ul class="train-list">
+                	        <%
+                	            do {
+                	                count++;
+                	                
+                	                if (count % 4 == 1) {
+                	        %>
+                	                    <div class="train-row">
+                	        <%
+                	                }
+                	        %>	
+									<form action="makeReservation.jsp?username=<%= usernameStr %>&password=<%= passwordStr %>&function=addReservation" method="post">                	                        
+										<ul class="train-item">
+                	                            <%
+                	                                String one = rs.getString("transitLineName");
+                	                                int two = rs.getInt("Train");
+                	                                String three = rs.getString("Origin");
+                	                                String four = rs.getString("Destination");
+                	                                String five = rs.getString("ArrivalDateTime");
+                	                                Timestamp six = rs.getTimestamp("DepartureDateTime");
+                	                                String eight = rs.getString("travelTime");
+                	                                String seven = rs.getString("Stops");
+                	                                int nine = rs.getInt("Fare");
+                	                                String ten = three.equals(four) ? "one way" : "round trip";
+                	                            %>
+                	                            <li><strong>Transit Line:</strong> <%= one %><br></li>
+                	                            <li><strong>Train:</strong> <%= two %><br></li>
+                	                            <li><strong>Origin:</strong> <%= three %><br></li>
+                	                            <li><strong>Destination:</strong> <%= four %><br></li>
+                	                            <li><strong>Departure Time:</strong> <%= six %><br></li>
+                	                            <li><strong>Arrival Time:</strong> <%= five %><br></li>
+                	                            <li><strong>Stops:</strong> <%= seven %><br></li>
+                	                            <li><strong>Travel Time:</strong> <%= eight %><br></li>
+                	                            <li><strong>Fare:</strong> <%= nine %><br><br></li>
+                	                            
+                	                            <input type="hidden" name="email" value="<%= email %>">
+                	                            <input type="hidden" name="resNum" value="<%= resNum %>">
+                	                            <input type="hidden" name="transitLineName" value="<%= one %>">
+                	                            <input type="hidden" name="departureDate" value="<%= six.toString() %>">
+                	                            <input type="hidden" name="trainNumber" value="<%= two %>">
+                	                            <input type="hidden" name="originStation" value="<%= three %>">
+                	                            <input type="hidden" name="destinationStation" value="<%= four %>">
+                	                            <input type="hidden" name="totalFare" value="<%= nine %>">
+                	                            <input type="hidden" name="tripType" value="<%= ten %>">
+                	                            
+                	                            <input type="submit" value="Make Reservation">
+                	                        </ul> 
+                	                    </form>   
+                	        <%
+                	                if (count % 4 == 0) {
+                	        %>
+                	                    </div> <!-- End of .train-row -->
+                	        <%
+                	                }
+                	            } while (rs.next());
+                	            
+                	            if (count % 5 != 0) {
+                	        %>
+                	                    </div> <!-- End of .train-row -->
+                	        <%
+                	            }
+                	        %>
+                	        </ul>       
+                	<%
+                	    } else {
+                	%>
+                	        <p>No schedules found for this location.</p>
+                	<%
                 }
         	} catch (SQLException e) {
                 e.printStackTrace();
-            } 
-        	
+            } 	    
+		    
     %>
+    </div>
+    
     	
     <%
         }
     %>
+    </div>
 	
-	<form action="reservations.jsp" method="post" style="text-align: left;">
-        <input type="submit" value="My Reservations" />
-        <input type="hidden" name="email" value="<%= email %>">
-        <input type="hidden" name="username" value="<%= usernameStr %>">
-        <input type="hidden" name="password" value="<%= passwordStr %>">
-    </form>
-    
-    <form action="login.jsp" method="post" style="text-align: left;">
-        <input type="submit" value="Logout" />
-    </form>
-    
-	</body>
+	
 </html>
 
 <head>
     <style>
         /* General body styling */
         body {
+        	display:flex;
+	        flex-direction: column;
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
+            padding: 1rem;
+        }
+        
+        .left-container{
+        	margin-right: 3rem;
+        	spacing: 1rem;
+        	display: flex;
+        	flex-direction: column;
+        	align-items: left;
+        }
+        
+        .schedules-container{
+        	
         }
 
         /* Center the main container */
         .main-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
         }
+        
+        table tr{
+        	
+        }
 
         /* Form container styling */
-        .form-container {
+        .form-container, .name, .train-schedule-name {
             background-color: #ffffff;
             padding: 20px 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 400px;
-            margin-bottom: 30px;
+			box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;        
+		}
+        
+        
+        .form-container{
+     		width: 400px;
+          	margin-bottom: 30px;
         }
 
         .form-container h2 {
@@ -379,7 +410,7 @@
             box-sizing: border-box;
         }
 
-        .form-container input[type="submit"] {
+        .form-container input[type="submit"], .reservations-button, .logout-button {
             width: 100%;
             padding: 10px;
             background-color: #007bff;
@@ -390,10 +421,33 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-
-        .form-container input[type="submit"]:hover {
-            background-color: #0056b3;
+        
+        .logout-button{
+           	background-color: #eb1546;
         }
+        
+        .all{
+        	display:flex;
+        	flex-direction:row;
+        }
+
+        .form-container input[type="submit"]:hover, .reservations-button:hover, .logout-button:hover {
+            background-color: #0056b3;
+			box-shadow: rgba(0, 0, 0, 0.1) 2px 2px, rgba(0, 0, 0, 0.08) 4px 4px, rgba(0, 0, 0, 0.06) 6px 6px, rgba(0, 0, 0, 0.04) 8px 8px, rgba(0, 0, 0, 0.02) 10px 10px;
+		  transition: box-shadow 0.5s ease-in-out;
+			
+		}
+		
+		.train-item:hover {
+            background-color: #ddd;
+			box-shadow: rgba(60, 64, 67, 0.35) 0px 1px 2px 0px, rgba(60, 64, 67, 0.20) 0px 2px 6px 2px;        
+		  	transition: box-shadow 0.5s ease-in-out;
+        }
+		
+		.logout-button:hover{
+		            background-color: #b81137;
+		
+		}
 
         /* Train schedule container */
         .train-schedule-container {
@@ -413,7 +467,6 @@
 
         .train-item {
             list-style: none;
-            margin: 10px 0;
             background-color: #f9f9f9;
             padding: 15px;
             border: 1px solid #ddd;
@@ -430,8 +483,23 @@
             color: #333;
         }
 
-        .train-item form {
-            margin-top: 10px;
+        
+        .train-row, .logout-container{
+        	display: flex;
+        	flex-direction:row;
+        	grid-auto-flow: row;
+			grid-column-gap: 10px;
+			align-items: center;
+			height: fit-content;
+        }
+        
+        .train-row{
+        	margin-top: 1.5rem;
+        }
+        
+        .logout-container{
+        	margin-bottom: 1.5rem;
+        	justify-content:center;
         }
 
         .train-item input[type="submit"] {
@@ -441,7 +509,8 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.1s ease;
+            margin: 0.7rem;
         }
 
         .train-item input[type="submit"]:hover {
@@ -472,6 +541,20 @@
 
         .nav-buttons input[type="submit"]:hover {
             background-color: #0056b3;
+        }
+        
+        p.name{
+        	margin-top:0;
+        	margin-bottom:0;
+        	width: fit-content;
+            font-weight: 300;
+        }	
+        
+        .train-schedule-name{
+        	margin-top:0;
+        	margin-bottom:0;
+            width: fit-content;
+            font-weight: 300;
         }
     </style>
 </head>
