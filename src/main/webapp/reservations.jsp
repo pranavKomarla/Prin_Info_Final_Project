@@ -35,39 +35,78 @@ String destinationStation = request.getParameter("destinationStation");
 int totalFare = Integer.parseInt(request.getParameter("totalFare"));
 String tripType = request.getParameter("tripType");
 
-String sql = "INSERT INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+String checkDuplicates = "SELECT * FROM reservation_accountreservation WHERE email_address = ? AND transitLine = ? AND trainNumber = ?";
+ApplicationDB database = new ApplicationDB(); 
+Connection connection = null;
+PreparedStatement statement = null;
 
-ApplicationDB db = new ApplicationDB(); 
-Connection con = null;
-PreparedStatement stmt = null;
+
 
 try {
-    con = db.getConnection();
-    stmt = con.prepareStatement(sql);
+    connection = database.getConnection();
+    statement = connection.prepareStatement(checkDuplicates);
+    statement.setString(1, email);
+	statement.setString(2, transitLineName);
+	statement.setInt(3, trainNumber);
     
-    // Set the parameters
-    stmt.setString(1, email);
-    stmt.setInt(2, resNum);
-    stmt.setString(3, transitLineName);
-    stmt.setTimestamp(4, timestamp);
-    stmt.setInt(5, trainNumber);
-    stmt.setString(6, originStation);
-    stmt.setString(7, destinationStation);
-    stmt.setInt(8, totalFare);
-    stmt.setString(9, tripType);
+    ResultSet rows = statement.executeQuery();
+    
+    if (!rows.next()) {
+        
+        String sql = "INSERT INTO reservation_accountreservation (email_address, ResNum, transitLine, DepartureDateTime, trainNumber, originStation, destinationStation, totalFare, tripType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    // Execute the update statement
-    int rowsAffected = stmt.executeUpdate();
-    if (rowsAffected > 0) {
-        out.println("Reservation added successfully!"+ tripType);
-    } else {
-        out.println("Reservation could not be added: Duplicate Reservation");
+        ApplicationDB db = new ApplicationDB(); 
+        Connection con = null;
+        PreparedStatement stmt = null;
+        
+
+        try {
+            con = db.getConnection();
+            stmt = con.prepareStatement(sql);
+            
+            // Set the parameters
+            stmt.setString(1, email);
+            stmt.setInt(2, resNum);
+            stmt.setString(3, transitLineName);
+            stmt.setTimestamp(4, timestamp);
+            stmt.setInt(5, trainNumber);
+            stmt.setString(6, originStation);
+            stmt.setString(7, destinationStation);
+            stmt.setInt(8, totalFare);
+            stmt.setString(9, tripType);
+
+            // Execute the update statement
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                out.println("Reservation added successfully!"+ tripType);
+            } else {
+                out.println("Reservation could not be added: Duplicate Reservation");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            out.println("Error: " + e.getMessage() + tripType);
+            out.println("Error: " + e.getMessage() + email);
+        } 
+        
+        
+    } 
+    
+    
+    else {
+    	
+    	%>
+    	<p>You have already reserved this!<p>
+    	<% 
+        
     }
 } catch (SQLException e) {
     e.printStackTrace();
     out.println("Error: " + e.getMessage() + tripType);
     out.println("Error: " + e.getMessage() + email);
 } 
+
+
+
 
 
 
@@ -82,8 +121,8 @@ try {
 	PreparedStatement stmt2 = null;
 
 
-    con2 = db.getConnection();
-    stmt2 = con.prepareStatement(sql2);
+    con2 = db2.getConnection();
+    stmt2 = con2.prepareStatement(sql2);
     
     // Set the parameters
     stmt2.setString(1, email);
