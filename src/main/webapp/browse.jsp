@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1" import="com.cs336.pkg.*"%>
 <%@ page import="java.io.*,java.util.*,java.sql.*"%>
+
 <%@ page import="javax.servlet.http.*,javax.servlet.*"%>
 
 <%!
@@ -13,57 +14,8 @@
 	int totalFare; 
 	
 	
-	public void make_reservation() {
-        String sql = "INSERT INTO reservation_accountreservation VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        ApplicationDB db = new ApplicationDB(); 
-        Connection con = null;
-        PreparedStatement stmt = null;
-
-        try {
-            con = db.getConnection();
-            stmt = con.prepareStatement(sql);
-            
-            // Set the parameters
-            stmt.setString(1, email);
-            stmt.setInt(2, resNum);
-            stmt.setString(3, transitLineName);
-            stmt.setString(4, departureDate);
-            stmt.setInt(5, trainNumber);
-            stmt.setString(6, originStation);
-            stmt.setString(7, destinationStation);
-            stmt.setInt(8, totalFare);
-
-            // Determine trip type
-            if(originStation.equals(destinationStation)) {
-                tripType = "round-trip";
-            } else {
-                tripType = "one-way"; 
-            }
-            stmt.setString(9, tripType);
-
-            // Execute the update statement
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                // Reservation was successfully added
-                //out.println("Reservation added successfully!");
-            } else {
-                // Handle failure to insert reservation
-                //out.println("Reservation could not be added.");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            // Clean up resources
-            try {
-                if (stmt != null) stmt.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	
+	
     
 %>
 
@@ -119,10 +71,20 @@
 				//Get username from text field
 				String username = request.getParameter("username");
 				String password = request.getParameter("password");
-				String email_address = request.getParameter("emailAddress");
 				usernameStr = username;
 				passwordStr = password; 
-				email = email_address; 
+				
+				String emailStr = "SELECT emailAddress FROM " + entity + " WHERE username = ? AND password = ?";
+				PreparedStatement psEmail = con.prepareStatement(emailStr);
+				psEmail.setString(1, username);
+				psEmail.setString(2, password);
+				ResultSet resultEmail = psEmail.executeQuery();
+				
+				if (resultEmail.next()) {
+				    email = resultEmail.getString("emailAddress");
+				} else {
+				    email = null; 
+				}
 				
 				//Make a SELECT query from the table specified by the 'command' parameter at the index.jsp
 				String str = "SELECT * FROM " + entity + " WHERE username = ? AND password = ?";
@@ -131,6 +93,8 @@
 				ps.setString(2, password);
 				//Run the query against the database.
 				ResultSet result = ps.executeQuery();
+				
+				
 	            // Check if any matching records exist
 	            if (!result.isBeforeFirst()) { // ResultSet is empty
 	                // Redirect to login.jsp with an error message
@@ -234,50 +198,65 @@
                     <ul class = "train-list">
                     <%
                         do {
-                    %>
-                        <li class = "train-item" 
-                        	data-transit-line="<%= rs.getString("transitLineName") %>"
-            				data-train="<%= rs.getInt("Train") %>"
-            				data-origin="<%= rs.getString("Origin") %>"
-            				data-destination="<%= rs.getString("Destination") %>"
-            				data-arrival-time="<%= rs.getString("ArrivalDateTime") %>"
-				            data-departure-time="<%= rs.getString("DepartureDateTime") %>"
-				            data-fare="<%= rs.getInt("Fare") %>"
-				            onclick="
-				                function() {
-				                    
-			                        transitLineName = this.getAttribute('data-transit-line'); 
-			                        trainNumber = this.getAttribute('data-train'); 
-			                        originStation = this.getAttribute('data-origin'); 
-			                        destinationStation = this.getAttribute('data-destination'); 
-			                        departureDate = this.getAttribute('data-departure-time'); 
-			                        totalFare = parseInt(this.getAttribute('data-fare'));
-				                    
-				                    
-				                }
-			            	"
+                        	
+                    %>	
+                    
+                    
+                    
+                    <form action="reservations.jsp" method="post">
+                    	<ul class = "train-item">
+                    	
+                    		<%
+                    			String one = rs.getString("transitLineName");
+	                    		int two = rs.getInt("Train");
+	                    		String three = rs.getString("Origin");
+	                    		String four = rs.getString("Destination");
+	                    		String five = rs.getString("ArrivalDateTime");
+	                    		Timestamp six = rs.getTimestamp("DepartureDateTime");
+	                    		String seven = rs.getString("travelTime");
+	                    		int eight = rs.getInt("Stops");
+	                    		int nine = rs.getInt("Fare");
+                    		%>
+                            <li><strong>Transit Line:</strong> <%= one %><br> </li>
+                            <li><strong>Train:</strong> <%= two%><br></li>
+                            <li><strong>Origin:</strong> <%=  three%><br></li>
+                            <li><strong>Destination:</strong> <%= four %><br></li>
+                            <li><strong>Arrival Time:</strong> <%=  five%><br></li>
+                            <li><strong>Departure Time:</strong> <%= six%><br></li>
+                            <li><strong>Stops:</strong> <%=  seven%><br></li>
+                            <li><strong>Travel Time:</strong> <%=  eight%><br></li>
+                            <li><strong>Fare:</strong> <%=  nine%><br><br></li>
+                            
+                            <input type="hidden" name="email" value="<%= email %>">
+                        	<input type="hidden" name="resNum" value="<%= resNum %>">
+                        	<input type="hidden" name="transitLineName" value="<%= one %>">
+                        	<input type="hidden" name="departureDate" value="<%= six.toString() %>">
+                        	<input type="hidden" name="trainNumber" value="<%= two %>">
+                        	<input type="hidden" name="originStation" value="<%= three %>">
+                        	<input type="hidden" name="destinationStation" value="<%= four %>">
+                        	<input type="hidden" name="totalFare" value="<%= nine %>">
+                        	<input type="submit" value="Make Reservation">
+                        </ul>
                         
-                        >
-                            <strong>Transit Line:</strong> <%= rs.getString("transitLineName") %><br>
-                            <strong>Train:</strong> <%= rs.getInt("Train") %><br>
-                            <strong>Origin:</strong> <%= rs.getString("Origin") %><br>
-                            <strong>Destination:</strong> <%= rs.getString("Destination") %><br>
-                            <strong>Arrival Time:</strong> <%= rs.getString("ArrivalDateTime") %><br>
-                            <strong>Departure Time:</strong> <%= rs.getString("DepartureDateTime") %><br>
-                            <strong>Stops:</strong> <%= rs.getInt("Stops") %><br>
-                            <strong>Travel Time:</strong> <%= rs.getString("travelTime") %><br>
-                            <strong>Fare:</strong> <%= rs.getInt("Fare") %><br><br>
-                        </li>
+                    </form>
+                        
+                      
                     <%
                         } while (rs.next());
                     %>
+                    
+                    
+                    
                     </ul>
-                    <input type="submit" value="Make Reservation" onclick = "make_reservation()"/>
+                    
+                    
+                    
+                    
+                    
+                   
+                    
                    
                 <%
-                
-                
-                
                 
                
                 } else {
@@ -298,7 +277,10 @@
         }
     %>
 	
-	
+	<form action="reservations.jsp" method="post" style="text-align: left;">
+        <input type="submit" value="My Reservations" />
+    </form>
+    
     <form action="login.jsp" method="post" style="text-align: left;">
         <input type="submit" value="Logout" />
     </form>
