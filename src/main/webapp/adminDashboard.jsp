@@ -134,9 +134,107 @@
 		
 		<%
 			} 
+			
+			StringBuilder queryBuilder2 = new StringBuilder("SELECT SUM(totalFare) AS totalFareSum FROM reservation_accountreservation WHERE 1=1");
+        	
+        	List<String> parameters2 = new ArrayList<>();
+			
+			if (transitLine!= null && !transitLine.isEmpty()) {
+			    queryBuilder2.append(" AND transitLine = ?");
+			    parameters2.add(transitLine);
+			}
+			if (customerName != null && !customerName.isEmpty()) {
+				String sqlName = "SELECT emailAddress FROM Customer WHERE firstName = ? AND lastName = ?";
+	            PreparedStatement ps2 = con.prepareStatement(sqlName);
+	            ps2.setString(1, nameParts[0]);
+	            ps2.setString(2, nameParts[1]);
+	            ResultSet rsEmail = ps2.executeQuery(); 
+	            if(rsEmail.next()) {
+	            	customerEmail = rsEmail.getString("emailAddress");
+	            }
+			    queryBuilder2.append(" AND email_address= ?");
+			    parameters2.add(customerEmail);
+			}
+			
+			
+			PreparedStatement ps4 = con.prepareStatement(queryBuilder2.toString());
+			
+			// Set parameters dynamically
+			for (int i = 0; i < parameters2.size(); i++) {
+			    ps4.setString(i + 1, parameters2.get(i));
+			}
+			
+			ResultSet rs2 = ps4.executeQuery();
+			if(rs2.next()){
+			%>
+			
+			<p>Revenue: <%= rs2.getInt("totalFareSum") %></p>
 		
+		
+		
+		
+		<%
+			}
 		}
-		%>
+        
+        
+        String bestCustomerSQL = "SELECT email_address, SUM(totalFare) AS totalFareSum FROM reservation_accountreservation GROUP BY email_address ORDER BY totalFareSum DESC LIMIT 1";
+        PreparedStatement psCustomer = con.prepareStatement(bestCustomerSQL);
+        ResultSet rsCustomer = psCustomer.executeQuery(); 
+        
+        if(rsCustomer.next()) {
+        	String emailCustomer = rsCustomer.getString("email_address");
+        	String sqlName = "SELECT firstName, lastName FROM Customer WHERE emailAddress = ?";
+        	PreparedStatement psName = con.prepareStatement(sqlName);
+        	psName.setString(1, emailCustomer); 
+        	
+        	ResultSet rsName = psName.executeQuery(); 
+        	String firstName = "";
+        	String lastName = "";
+        	if(rsName.next()) {
+        		firstName = rsName.getString("firstName");
+        		lastName = rsName.getString("lastName");
+        	}
+        	
+        %>
+        
+        	<p>Best Customer: <%= firstName + " " + lastName %></p>
+        	<p>Most Commonly Used Transit Lines:</p>
+        	<ul>
+        	
+        
+        
+        <% 
+        }
+        
+        
+        
+        
+        String topTrainLine = "SELECT transitLine, COUNT(transitLine) as lineCount FROM reservation_accountreservation GROUP BY transitLine ORDER BY lineCount DESC LIMIT 5";
+        PreparedStatement psTrain = con.prepareStatement(topTrainLine);
+        ResultSet rsTrain = psTrain.executeQuery(); 
+        
+        
+        while(rsTrain.next()) {
+        	
+        	%>
+        	
+        	<li><%= rsTrain.getString("transitLine") %></li>
+        
+        <% 
+        	}
+        
+        
+        
+        %>
+        </ul>
+        
+        
+		
+		
+			
+		
+		
 		
 		
 		<form  action="login.jsp" method="post" style="text-align: left;">
